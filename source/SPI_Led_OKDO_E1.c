@@ -71,10 +71,6 @@ void Animate(void)
 
 }
 
-/*
- * @brief Application entry point.
- */
-
 int main(void)
 {
 	spi_transfer_t masterXfer;
