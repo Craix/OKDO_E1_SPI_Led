@@ -9,7 +9,6 @@
 //RGB LED Ring WS 28 12 B 5050 x 8 LEDs - 30mm
 
 #define LEDS 8
-#define TRANSFER_SIZE (24*LEDS) /*! Transfer dataSize */
 
 #define GET_BIT(k, n) (k & (1 << (n)))
 #define SET_BIT(k, n) (k |= (1 << (n)))
@@ -42,57 +41,65 @@
 uint32_t colors[LEDS]={0};
 uint32_t k=0;
 
-uint8_t masterRxData[TRANSFER_SIZE] = {0};
-uint8_t masterTxData[TRANSFER_SIZE] = {0};
-
-volatile bool isTransferCompleted = false;
-
-void FLXC8_DMA_Callback(SPI_Type * base, spi_dma_handle_t * handle, status_t status, void * userData)
+void Neopixels_Send(SPI_Type *base, uint32_t n, uint32_t *value)
 {
-	if (status == kStatus_Success)
+	uint16_t LED_data = 0;
+	uint32_t control = 0U;
+	spi_config_t *g_config;
+	uint32_t configFlags = 0U;
+
+
+	//configFlags = kSPI_FrameAssert;
+	g_config= SPI_GetConfig(base);
+
+	/* set data width */
+	control |= (uint32_t)SPI_FIFOWR_LEN((g_config->dataWidth));
+
+	/* set sssel */
+	control |= (SPI_DEASSERT_ALL & (~SPI_DEASSERTNUM_SSEL((uint32_t)(g_config->sselNum))));
+
+	/* mask configFlags */
+	control |= (configFlags & (uint32_t)SPI_FIFOWR_FLAGS_MASK);
+
+	/* ignore RX */
+	control |= (1 << 22);
+
+	for(int j=0;j<n;j++)
 	{
-		isTransferCompleted = true;
+		for(int i=23;i>=0;i--)
+		{
+			LED_data = GET_BIT(value[j], i) ? CODE_1 : CODE_0;
+			while(!(base->FIFOSTAT & kSPI_TxNotFullFlag)){};
+			base->FIFOWR = LED_data | control;
+		}
+	}
+
+	// Reset >= 50 us
+	LED_data=0;
+	for(int j=0;j<50;j++)
+	{
+			while(!(base->FIFOSTAT & kSPI_TxNotFullFlag)){};
+			base->FIFOWR = LED_data | control;
 	}
 }
 
 void Animate(void)
 {
-	for(int j = 0; j < LEDS; j++)
+	for(int j=0;j<LEDS;j++)
 	{
-		colors[j] = 0x0;
+		colors[j]=0x000000;
 	}
 
-	colors[k++] = VRGB_to_GRB(128, 0, 0);
+	colors[k++]= VRGB_to_GRB(128, 0, 0);
 
-	if(k >= LEDS)
+	if(k>=LEDS)
 	{
-		k = 0;
-	}
-
-	int n = 0;
-
-	for(int j = 0; j < LEDS; j++)
-	{
-		for(int i = 0; i < 24; i++)
-		{
-			if(GET_BIT(colors[j], 23 - i))
-			{
-				masterTxData[n] = CODE_1;
-			}
-			else
-			{
-				masterTxData[n] = CODE_0;
-			}
-
-			n++;
-		}
+		k=0;
 	}
 }
 
 int main(void)
 {
-	spi_transfer_t masterXfer;
-
 	/* Init board hardware. */
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
@@ -103,24 +110,11 @@ int main(void)
 		BOARD_InitDebugConsole();
 	#endif
 
-		/*Config transfer*/
-		masterXfer.txData = masterTxData;
-		masterXfer.rxData = masterRxData;
-		masterXfer.dataSize = sizeof(masterTxData);
-		masterXfer.configFlags = 0;
-
 		while(1)
 		{
 			Animate();
 
-			if (kStatus_Success != SPI_MasterTransferDMA(FLEXCOMM8_PERIPHERAL, &FLEXCOMM8_DMA_Handle, &masterXfer))
-			{
-				PRINTF("SPI_MasterTransferDMA ERROR!\r\n ");
-			}
-
-			isTransferCompleted = false;
-
-			while(isTransferCompleted == false){}
+			Neopixels_Send(FLEXCOMM8_PERIPHERAL, LEDS, colors);
 
 			for(volatile int i=0;i<500000;i++);
 		}

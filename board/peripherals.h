@@ -9,10 +9,8 @@
 /***********************************************************************************************************************
  * Included files
  **********************************************************************************************************************/
-#include "fsl_dma.h"
 #include "fsl_common.h"
 #include "fsl_spi.h"
-#include "fsl_spi_dma.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -22,35 +20,16 @@ extern "C" {
  * Definitions
  **********************************************************************************************************************/
 /* Definitions for BOARD_InitPeripherals_cm33_core0 functional group */
-/* Used DMA device. */
-#define DMA0_DMA_BASEADDR DMA0
 /* BOARD_InitPeripherals_cm33_core0 defines for FLEXCOMM8 */
 /* Definition of peripheral ID */
 #define FLEXCOMM8_PERIPHERAL ((SPI_Type *)FLEXCOMM8)
 /* Definition of the clock source frequency */
 #define FLEXCOMM8_CLOCK_SOURCE 12000000UL
-/* Selected DMA channel number. */
-#define FLEXCOMM8_RX_DMA_CHANNEL 2
-/* Used DMA device. */
-#define FLEXCOMM8_RX_DMA_BASEADDR DMA0
-/* Selected DMA channel number. */
-#define FLEXCOMM8_TX_DMA_CHANNEL 3
-/* Used DMA device. */
-#define FLEXCOMM8_TX_DMA_BASEADDR DMA0
 
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
 extern const spi_master_config_t FLEXCOMM8_config;
-extern dma_handle_t FLEXCOMM8_RX_Handle;
-extern dma_handle_t FLEXCOMM8_TX_Handle;
-extern spi_dma_handle_t FLEXCOMM8_DMA_Handle;
-
-/***********************************************************************************************************************
- * Callback functions
- **********************************************************************************************************************/
-/* SPI DMA callback function for the FLEXCOMM8 component (init. function BOARD_InitPeripherals_cm33_core0)*/
-extern void FLXC8_DMA_Callback(SPI_Type *,spi_dma_handle_t *,status_t ,void *);
 
 /***********************************************************************************************************************
  * Initialization functions

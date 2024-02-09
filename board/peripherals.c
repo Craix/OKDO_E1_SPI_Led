@@ -57,39 +57,6 @@ component:
  * BOARD_InitPeripherals_cm33_core0 functional group
  **********************************************************************************************************************/
 /***********************************************************************************************************************
- * DMA0 initialization code
- **********************************************************************************************************************/
-/* clang-format off */
-/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-instance:
-- name: 'DMA0'
-- type: 'lpc_dma'
-- mode: 'basic'
-- custom_name_enabled: 'false'
-- type_id: 'lpc_dma_c13ca997a68f2ca6c666916ba13db7d7'
-- functional_group: 'BOARD_InitPeripherals_cm33_core0'
-- peripheral: 'DMA0'
-- config_sets:
-  - fsl_dma:
-    - dma_table:
-      - 0: []
-      - 1: []
-    - dma_channels: []
-    - init_interrupt: 'false'
-    - dma_interrupt:
-      - IRQn: 'DMA0_IRQn'
-      - enable_interrrupt: 'enabled'
-      - enable_priority: 'false'
-      - priority: '0'
-      - enable_custom_name: 'false'
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
-/* clang-format on */
-
-/* Empty initialization function (commented out)
-static void DMA0_init(void) {
-} */
-
-/***********************************************************************************************************************
  * NVIC initialization code
  **********************************************************************************************************************/
 /* clang-format off */
@@ -121,7 +88,7 @@ static void NVIC_init(void) {
 instance:
 - name: 'FLEXCOMM8'
 - type: 'flexcomm_spi'
-- mode: 'dma'
+- mode: 'SPI_Polling'
 - custom_name_enabled: 'false'
 - type_id: 'flexcomm_spi_481dadba00035f986f31ed9ac95af181'
 - functional_group: 'BOARD_InitPeripherals_cm33_core0'
@@ -148,25 +115,6 @@ instance:
         - postDelay: '0'
         - frameDelay: '0'
         - transferDelay: '0'
-  - dmaCfg:
-    - dma_channels:
-      - enable_rx_dma_channel: 'true'
-      - dma_rx_channel:
-        - DMA_source: 'kDma0RequestFlexcomm8Rx'
-        - init_channel_priority: 'false'
-        - dma_priority: 'kDMA_ChannelPriority0'
-        - enable_custom_name: 'false'
-      - enable_tx_dma_channel: 'true'
-      - dma_tx_channel:
-        - DMA_source: 'kDma0RequestFlexcomm8Tx'
-        - init_channel_priority: 'false'
-        - dma_priority: 'kDMA_ChannelPriority0'
-        - enable_custom_name: 'false'
-    - spi_dma_handle:
-      - enable_custom_name: 'false'
-      - init_callback: 'true'
-      - callback_fcn: 'FLXC8_DMA_Callback'
-      - user_data: ''
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 const spi_master_config_t FLEXCOMM8_config = {
@@ -188,23 +136,10 @@ const spi_master_config_t FLEXCOMM8_config = {
     .transferDelay = 0U
   }
 };
-dma_handle_t FLEXCOMM8_RX_Handle;
-dma_handle_t FLEXCOMM8_TX_Handle;
-spi_dma_handle_t FLEXCOMM8_DMA_Handle;
 
 static void FLEXCOMM8_init(void) {
   /* Initialization function */
   SPI_MasterInit(FLEXCOMM8_PERIPHERAL, &FLEXCOMM8_config, FLEXCOMM8_CLOCK_SOURCE);
-  /* Enable the DMA 2 channel in the DMA */
-  DMA_EnableChannel(FLEXCOMM8_RX_DMA_BASEADDR, FLEXCOMM8_RX_DMA_CHANNEL);
-  /* Create the DMA FLEXCOMM8_RX_Handle handle */
-  DMA_CreateHandle(&FLEXCOMM8_RX_Handle, FLEXCOMM8_RX_DMA_BASEADDR, FLEXCOMM8_RX_DMA_CHANNEL);
-  /* Enable the DMA 3 channel in the DMA */
-  DMA_EnableChannel(FLEXCOMM8_TX_DMA_BASEADDR, FLEXCOMM8_TX_DMA_CHANNEL);
-  /* Create the DMA FLEXCOMM8_TX_Handle handle */
-  DMA_CreateHandle(&FLEXCOMM8_TX_Handle, FLEXCOMM8_TX_DMA_BASEADDR, FLEXCOMM8_TX_DMA_CHANNEL);
-  /* Create the SPI DMA handle */
-  SPI_MasterTransferCreateHandleDMA(FLEXCOMM8_PERIPHERAL, &FLEXCOMM8_DMA_Handle, FLXC8_DMA_Callback, NULL, &FLEXCOMM8_TX_Handle, &FLEXCOMM8_RX_Handle);
 }
 
 /***********************************************************************************************************************
@@ -212,9 +147,6 @@ static void FLEXCOMM8_init(void) {
  **********************************************************************************************************************/
 void BOARD_InitPeripherals_cm33_core0(void)
 {
-  /* Global initialization */
-  DMA_Init(DMA0_DMA_BASEADDR);
-
   /* Initialize components */
   FLEXCOMM8_init();
 }
