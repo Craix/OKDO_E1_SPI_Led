@@ -37,6 +37,7 @@ void BOARD_InitBootPins(void)
 {
     BOARD_InitDEBUG_UARTPins();
     SPI_Led();
+    Timer();
 }
 
 /* clang-format off */
@@ -904,6 +905,43 @@ void SPI_Led(void)
                          * : Enable Digital mode.
                          * Digital input is enabled. */
                         | IOCON_PIO_DIGIMODE(PIO1_3_DIGIMODE_DIGITAL));
+}
+
+/* clang-format off */
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+Timer:
+- options: {callFromInitBoot: 'true', coreID: cm33_core0, enableClock: 'true'}
+- pin_list:
+  - {pin_num: '54', peripheral: CTIMER0, signal: 'MATCH, 0', pin_signal: PIO0_0/FC3_SCK/CTIMER0_MAT0/SCT_GPI0/SD1_CARD_INT_N/SECURE_GPIO0_0/ACMP0_A}
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+/* clang-format on */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : Timer
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+/* Function assigned for the Cortex-M33 (Core #0) */
+void Timer(void)
+{
+    /* Enables the clock for the I/O controller.: Enable Clock. */
+    CLOCK_EnableClock(kCLOCK_Iocon);
+
+    IOCON->PIO[0][0] = ((IOCON->PIO[0][0] &
+                         /* Mask bits to zero which are setting */
+                         (~(IOCON_PIO_FUNC_MASK | IOCON_PIO_DIGIMODE_MASK)))
+
+                        /* Selects pin function.
+                         * : PORT00 (pin 54) is configured as CTIMER0_MAT0. */
+                        | IOCON_PIO_FUNC(PIO0_0_FUNC_ALT3)
+
+                        /* Select Digital mode.
+                         * : Enable Digital mode.
+                         * Digital input is enabled. */
+                        | IOCON_PIO_DIGIMODE(PIO0_0_DIGIMODE_DIGITAL));
 }
 /***********************************************************************************************************************
  * EOF

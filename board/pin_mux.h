@@ -446,6 +446,15 @@ void BOARD_InitACCELPins(void); /* Function assigned for the Cortex-M33 (Core #0
  */
 void SPI_Led(void); /* Function assigned for the Cortex-M33 (Core #0) */
 
+#define PIO0_0_DIGIMODE_DIGITAL 0x01u /*!<@brief Select Digital mode.: Enable Digital mode. Digital input is enabled. */
+#define PIO0_0_FUNC_ALT3 0x03u        /*!<@brief Selects pin function.: Alternative connection 3. */
+
+/*!
+ * @brief Configures pin routing and optionally pin electrical features.
+ *
+ */
+void Timer(void); /* Function assigned for the Cortex-M33 (Core #0) */
+
 #if defined(__cplusplus)
 }
 #endif

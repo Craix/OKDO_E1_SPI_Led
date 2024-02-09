@@ -9,6 +9,7 @@
 //RGB LED Ring WS 28 12 B 5050 x 8 LEDs - 30mm
 
 #define LEDS 8
+#define COLOR 5
 
 #define GET_BIT(k, n) (k & (1 << (n)))
 #define SET_BIT(k, n) (k |= (1 << (n)))
@@ -38,8 +39,36 @@
 #define CODE_0 0xC0
 #define CODE_1 0xFC
 
+uint32_t colorOrder[COLOR] = {0x800000, 0x808000, 0x008000, 0x008080, 0x000080};
 uint32_t colors[LEDS]={0};
-uint32_t k=0;
+uint32_t k = 0;
+
+void CT0_Callback(uint32_t flags)
+{
+	k++;
+
+	if(k > (LEDS * COLOR))
+	{
+		k = 0;
+	}
+}
+
+void Animate(void)
+{
+	//flush all
+	for(int j=0;j<LEDS;j++)
+	{
+		colors[j] = 0x000000;
+	}
+
+	for(int i = 0; i < COLOR; i++)
+	{
+		for(int j = (i * 8); j < ((i + 1) * 8) && j < k; j++)
+		{
+			colors[j - (i * 8)]= HRGB_to_GRB(colorOrder[i]);
+		}
+	}
+}
 
 void Neopixels_Send(SPI_Type *base, uint32_t n, uint32_t *value)
 {
@@ -47,7 +76,6 @@ void Neopixels_Send(SPI_Type *base, uint32_t n, uint32_t *value)
 	uint32_t control = 0U;
 	spi_config_t *g_config;
 	uint32_t configFlags = 0U;
-
 
 	//configFlags = kSPI_FrameAssert;
 	g_config= SPI_GetConfig(base);
@@ -83,21 +111,6 @@ void Neopixels_Send(SPI_Type *base, uint32_t n, uint32_t *value)
 	}
 }
 
-void Animate(void)
-{
-	for(int j=0;j<LEDS;j++)
-	{
-		colors[j]=0x000000;
-	}
-
-	colors[k++]= VRGB_to_GRB(128, 0, 0);
-
-	if(k>=LEDS)
-	{
-		k=0;
-	}
-}
-
 int main(void)
 {
 	/* Init board hardware. */
@@ -110,14 +123,16 @@ int main(void)
 		BOARD_InitDebugConsole();
 	#endif
 
-		while(1)
-		{
-			Animate();
+	PRINTF("Hello world \r\n");
 
-			Neopixels_Send(FLEXCOMM8_PERIPHERAL, LEDS, colors);
+	while(1)
+	{
+		Animate();
 
-			for(volatile int i=0;i<500000;i++);
-		}
+		Neopixels_Send(FLEXCOMM8_PERIPHERAL, LEDS, colors);
 
-		return 0;
+		for(volatile int i=0;i<500000;i++);
+	}
+
+	return 0;
 }

@@ -102,10 +102,13 @@ void BOARD_BootClockFRO12M(void)
 name: BOARD_BootClockFROHF96M
 called_from_default_init: true
 outputs:
+- {id: CTIMER0_clock.outFreq, value: 96 MHz}
 - {id: HSLSPI_clock.outFreq, value: 12 MHz}
 - {id: System_clock.outFreq, value: 96 MHz}
 settings:
 - {id: ANALOG_CONTROL_FRO192M_CTRL_ENDI_FRO_96M_CFG, value: Enable}
+- {id: SYSCON.CTIMERCLKSEL0.sel, value: ANACTRL.fro_hf_clk}
+- {id: SYSCON.FROHFDIV.scale, value: '2'}
 - {id: SYSCON.HSLSPICLKSEL.sel, value: ANACTRL.fro_12m_clk}
 - {id: SYSCON.MAINCLKSELA.sel, value: ANACTRL.fro_hf_clk}
 sources:
@@ -139,6 +142,7 @@ void BOARD_BootClockFROHF96M(void)
     /*!< Set up clock selectors - Attach clocks to the peripheries */
     CLOCK_AttachClk(kFRO_HF_to_MAIN_CLK);                 /*!< Switch MAIN_CLK to FRO_HF */
     CLOCK_AttachClk(kFRO12M_to_HSLSPI);                 /*!< Switch HSLSPI to FRO12M */
+    CLOCK_AttachClk(kFRO_HF_to_CTIMER0);                 /*!< Switch CTIMER0 to FRO_HF */
 
     /*!< Set SystemCoreClock variable. */
     SystemCoreClock = BOARD_BOOTCLOCKFROHF96M_CORE_CLOCK;

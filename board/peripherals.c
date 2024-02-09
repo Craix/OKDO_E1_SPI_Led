@@ -71,7 +71,8 @@ instance:
 - peripheral: 'NVIC'
 - config_sets:
   - nvic:
-    - interrupt_table: []
+    - interrupt_table:
+      - 0: []
     - interrupts: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
@@ -143,12 +144,82 @@ static void FLEXCOMM8_init(void) {
 }
 
 /***********************************************************************************************************************
+ * CTIMER0 initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'CTIMER0'
+- type: 'ctimer'
+- mode: 'Capture_Match'
+- custom_name_enabled: 'false'
+- type_id: 'ctimer_44573e4bbd77c18d33bceb2e7900a074'
+- functional_group: 'BOARD_InitPeripherals_cm33_core0'
+- peripheral: 'CTIMER0'
+- config_sets:
+  - fsl_ctimer:
+    - ctimerConfig:
+      - mode: 'kCTIMER_TimerMode'
+      - clockSource: 'FunctionClock'
+      - clockSourceFreq: 'BOARD_BootClockFROHF96M'
+      - timerPrescaler: '1'
+    - EnableTimerInInit: 'true'
+    - matchChannels:
+      - 0:
+        - matchChannelPrefixId: 'Match_0'
+        - matchChannel: 'kCTIMER_Match_0'
+        - matchValueStr: '24000000'
+        - enableCounterReset: 'true'
+        - enableCounterStop: 'false'
+        - outControl: 'kCTIMER_Output_Toggle'
+        - outPinInitValue: 'low'
+        - enableInterrupt: 'true'
+    - captureChannels: []
+    - interruptCallbackConfig:
+      - interrupt:
+        - IRQn: 'CTIMER0_IRQn'
+        - enable_priority: 'true'
+        - priority: '0'
+      - callback: 'kCTIMER_SingleCallback'
+      - singleCallback: 'CT0_Callback'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const ctimer_config_t CTIMER0_config = {
+  .mode = kCTIMER_TimerMode,
+  .input = kCTIMER_Capture_0,
+  .prescale = 0
+};
+const ctimer_match_config_t CTIMER0_Match_0_config = {
+  .matchValue = 23999999,
+  .enableCounterReset = true,
+  .enableCounterStop = false,
+  .outControl = kCTIMER_Output_Toggle,
+  .outPinInitState = false,
+  .enableInterrupt = true
+};
+/* Single callback functions definition */
+ctimer_callback_t CTIMER0_callback[] = {CT0_Callback};
+
+static void CTIMER0_init(void) {
+  /* CTIMER0 peripheral initialization */
+  CTIMER_Init(CTIMER0_PERIPHERAL, &CTIMER0_config);
+  /* Interrupt vector CTIMER0_IRQn priority settings in the NVIC. */
+  NVIC_SetPriority(CTIMER0_TIMER_IRQN, CTIMER0_TIMER_IRQ_PRIORITY);
+  /* Match channel 0 of CTIMER0 peripheral initialization */
+  CTIMER_SetupMatch(CTIMER0_PERIPHERAL, CTIMER0_MATCH_0_CHANNEL, &CTIMER0_Match_0_config);
+  CTIMER_RegisterCallBack(CTIMER0_PERIPHERAL, CTIMER0_callback, kCTIMER_SingleCallback);
+  /* Start the timer */
+  CTIMER_StartTimer(CTIMER0_PERIPHERAL);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 void BOARD_InitPeripherals_cm33_core0(void)
 {
   /* Initialize components */
   FLEXCOMM8_init();
+  CTIMER0_init();
 }
 
 /***********************************************************************************************************************
