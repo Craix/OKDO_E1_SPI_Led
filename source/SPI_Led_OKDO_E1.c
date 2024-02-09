@@ -55,7 +55,6 @@ void CT0_Callback(uint32_t flags)
 
 void Animate(void)
 {
-	//flush all
 	for(int j=0;j<LEDS;j++)
 	{
 		colors[j] = 0x000000;
