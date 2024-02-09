@@ -45,30 +45,48 @@ uint32_t k=0;
 uint8_t masterRxData[TRANSFER_SIZE] = {0};
 uint8_t masterTxData[TRANSFER_SIZE] = {0};
 
+volatile bool isTransferCompleted = false;
+
+void FLXC8_DMA_Callback(SPI_Type * base, spi_dma_handle_t * handle, status_t status, void * userData)
+{
+	if (status == kStatus_Success)
+	{
+		isTransferCompleted = true;
+	}
+}
+
 void Animate(void)
 {
-
-	int n=0;
-
-	for(int j=0;j<LEDS;j++)
-		colors[j]=0x000000;
-
-	colors[k++]=HRGB_to_GRB(0xAA0000);
-
-
-	if(k>=LEDS)
-		k=0;
-
-	n=0;
-	for(int j=0;j<LEDS;j++)
+	for(int j = 0; j < LEDS; j++)
 	{
-		for(int i=0;i<24;i++)
+		colors[j] = 0x0;
+	}
+
+	colors[k++] = VRGB_to_GRB(128, 0, 0);
+
+	if(k >= LEDS)
+	{
+		k = 0;
+	}
+
+	int n = 0;
+
+	for(int j = 0; j < LEDS; j++)
+	{
+		for(int i = 0; i < 24; i++)
 		{
-			masterTxData[n]=GET_BIT(colors[j], 23-i) ? CODE_1 : CODE_0;
+			if(GET_BIT(colors[j], 23 - i))
+			{
+				masterTxData[n] = CODE_1;
+			}
+			else
+			{
+				masterTxData[n] = CODE_0;
+			}
+
 			n++;
 		}
 	}
-
 }
 
 int main(void)
@@ -89,11 +107,21 @@ int main(void)
 		masterXfer.txData = masterTxData;
 		masterXfer.rxData = masterRxData;
 		masterXfer.dataSize = sizeof(masterTxData);
+		masterXfer.configFlags = 0;
 
 		while(1)
 		{
 			Animate();
-			SPI_MasterTransferBlocking(FLEXCOMM8_PERIPHERAL, &masterXfer);
+
+			if (kStatus_Success != SPI_MasterTransferDMA(FLEXCOMM8_PERIPHERAL, &FLEXCOMM8_DMA_Handle, &masterXfer))
+			{
+				PRINTF("SPI_MasterTransferDMA ERROR!\r\n ");
+			}
+
+			isTransferCompleted = false;
+
+			while(isTransferCompleted == false){}
+
 			for(volatile int i=0;i<500000;i++);
 		}
 
